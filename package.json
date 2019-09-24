@@ -2,13 +2,28 @@
   "name": "azure-coverage",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "build/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "tsc": "tsc",
+    "start": "node ."
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "dotenv": "^8.1.0"
+    "@types/node": "^12.7.5",
+    "axios": "^0.19.0",
+    "dotenv": "^8.1.0",
+    "sanctuary": "^2.0.0",
+    "typescript": "^3.6.3"
+  },
+  "devDependencies": {
+    "husky": "^3.0.5",
+    "prettier": "1.18.2",
+    "pretty-quick": "^1.11.1"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "pretty-quick --staged"
+    }
   }
 }
