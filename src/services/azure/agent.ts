@@ -32,9 +32,10 @@ const definitions = ({
 const builds = ({
   organization = "INVALID_ORGANIZATION",
   project = "INVALID_PROJECT",
-  definitions
+  definitions,
+  maxTime
 }: IBuildOptions) =>
-  `https://dev.azure.com/${organization}/${project}/_apis/build/builds?api-version=5.1&maxBuildsPerDefinition=1&queryOrder=finishTimeDescending&definitions=${definitions}`;
+  `https://dev.azure.com/${organization}/${project}/_apis/build/builds?api-version=5.1&maxBuildsPerDefinition=1&queryOrder=finishTimeDescending&definitions=${definitions}&maxTime=${maxTime}`;
 
 export default {
   fetchCodeCoverage: (config: ICoverageOptions) =>
@@ -42,5 +43,5 @@ export default {
   fetchDefinitions: (config: IDefinitionOptions) =>
     instance.get(definitions(config)).then(result => result.data),
   fetchBuilds: (config: IBuildOptions) =>
-    instance.get(builds(config)).then(result => result.data),
+    instance.get(builds(config)).then(result => result.data)
 };

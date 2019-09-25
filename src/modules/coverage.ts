@@ -2,17 +2,22 @@ import R from "ramda";
 import azure from "../services/azure";
 
 export function mergeResultsForComparison(
-  before: Array<IResult | undefined>,
-  after: Array<IResult | undefined>
+  before: Array<IResult>,
+  after: Array<IResult>
 ): Array<IResultComparison> {
   const merge: (
     arrays: Array<Array<IResult>>
   ) => Array<IResultComparison> = R.pipe(
-    R.map(R.indexBy(R.prop("id"))),
-    R.reduce(R.mergeWith(R.merge), {}),
+    R.map(R.indexBy((r: IResult) => String(r.id))),
+    R.reduce(R.mergeWith((b: IResult, a: IResult): IResultComparison => ({
+      id: a.id,
+      name: a.name,
+      coverageBefore: b.coverage,
+      coverageAfter: a.coverage
+    })), {}),
     R.values
   );
-  return merge([before, after]);
+  return merge([before, after]).filter(r => !R.isNil(r.coverageAfter) && !R.isNil(r.coverageBefore));
 }
 
 async function getDefinitions() {
@@ -24,7 +29,7 @@ async function getDefinitions() {
 async function _getProjectsCoverage(
   definitions: Array<IDefinition>,
   maxDate: Date
-): Promise<Array<IResult | undefined>> {
+): Promise<Array<IResult>> {
   const defIds = definitions.map(R.prop("id"));
   const builds = await azure.build(defIds, maxDate);
   if (!builds) throw Error("No builds");
@@ -34,30 +39,31 @@ async function _getProjectsCoverage(
   );
   if (!coverages) throw Error("No coverages");
 
-  return coverages.map((c, i) =>
-    !c
-      ? undefined
-      : {
-          id: builds[i].definition.id,
-          name: builds[i].definition.name,
-          coverage: c
-        }
-  );
+  return coverages
+    .map((c, i) => ({
+      id: builds[i].definition.id,
+      name: builds[i].definition.name,
+      coverage: c
+    }))
+    .filter(r => !R.isNil(r.coverage));
 }
 
 export async function getProjectsCoverage(
-  maxDate: Date = new Date()
-): Promise<Array<IResult | undefined>> {
+  maxDate: Date = new Date
+): Promise<Array<IResult>> {
   const definitions = await getDefinitions();
   return _getProjectsCoverage(definitions, maxDate);
 }
 
 export async function getProjectsCoverageComparison(
-  dateBefore: Date = new Date(),
+  dateBefore: Date,
   dateAfter: Date = new Date()
-): Promise<Array<IResultComparison | undefined>> {
+): Promise<Array<IResultComparison>> {
+  if (!dateBefore) throw Error('dateBefore is required!');
   const definitions = await getDefinitions();
-  const resultsBefore = await _getProjectsCoverage(definitions, dateBefore);
-  const resultsAfter = await _getProjectsCoverage(definitions, dateAfter);
+  const [resultsBefore, resultsAfter] = await Promise.all([
+    _getProjectsCoverage(definitions, dateBefore),
+    _getProjectsCoverage(definitions, dateAfter)
+  ]);
   return mergeResultsForComparison(resultsBefore, resultsAfter);
 }

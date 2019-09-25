@@ -70,6 +70,7 @@ interface IResult {
 }
 
 interface IResultComparison {
+  id: number,
   name: string;
   coverageBefore: number;
   coverageAfter: number;

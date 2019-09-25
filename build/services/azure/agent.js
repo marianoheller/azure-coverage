@@ -27,8 +27,8 @@ var definitions = function (_a) {
 // ========================================
 // Build
 var builds = function (_a) {
-    var _b = _a.organization, organization = _b === void 0 ? "INVALID_ORGANIZATION" : _b, _c = _a.project, project = _c === void 0 ? "INVALID_PROJECT" : _c, definitions = _a.definitions;
-    return "https://dev.azure.com/" + organization + "/" + project + "/_apis/build/builds?api-version=5.1&maxBuildsPerDefinition=1&queryOrder=finishTimeDescending&definitions=" + definitions;
+    var _b = _a.organization, organization = _b === void 0 ? "INVALID_ORGANIZATION" : _b, _c = _a.project, project = _c === void 0 ? "INVALID_PROJECT" : _c, definitions = _a.definitions, maxTime = _a.maxTime;
+    return "https://dev.azure.com/" + organization + "/" + project + "/_apis/build/builds?api-version=5.1&maxBuildsPerDefinition=1&queryOrder=finishTimeDescending&definitions=" + definitions + "&maxTime=" + maxTime;
 };
 exports.default = {
     fetchCodeCoverage: function (config) {
@@ -39,5 +39,5 @@ exports.default = {
     },
     fetchBuilds: function (config) {
         return instance.get(builds(config)).then(function (result) { return result.data; });
-    },
+    }
 };

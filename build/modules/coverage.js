@@ -41,6 +41,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var ramda_1 = __importDefault(require("ramda"));
 var azure_1 = __importDefault(require("../services/azure"));
+function mergeResultsForComparison(before, after) {
+    var merge = ramda_1.default.pipe(ramda_1.default.map(ramda_1.default.indexBy(function (r) { return String(r.id); })), ramda_1.default.reduce(ramda_1.default.mergeWith(function (b, a) { return ({
+        id: a.id,
+        name: a.name,
+        coverageBefore: b.coverage,
+        coverageAfter: a.coverage
+    }); }), {}), ramda_1.default.values);
+    return merge([before, after]).filter(function (r) { return !ramda_1.default.isNil(r.coverageAfter) && !ramda_1.default.isNil(r.coverageBefore); });
+}
+exports.mergeResultsForComparison = mergeResultsForComparison;
 function getDefinitions() {
     return __awaiter(this, void 0, void 0, function () {
         var definitions;
@@ -73,21 +83,19 @@ function _getProjectsCoverage(definitions, maxDate) {
                     coverages = _a.sent();
                     if (!coverages)
                         throw Error("No coverages");
-                    return [2 /*return*/, coverages.map(function (c, i) {
-                            return !c
-                                ? undefined
-                                : {
-                                    name: builds[i].definition.name,
-                                    coverage: c
-                                };
-                        })];
+                    return [2 /*return*/, coverages
+                            .map(function (c, i) { return ({
+                            id: builds[i].definition.id,
+                            name: builds[i].definition.name,
+                            coverage: c
+                        }); })
+                            .filter(function (r) { return !ramda_1.default.isNil(r.coverage); })];
             }
         });
     });
 }
-exports._getProjectsCoverage = _getProjectsCoverage;
 function getProjectsCoverage(maxDate) {
-    if (maxDate === void 0) { maxDate = new Date(); }
+    if (maxDate === void 0) { maxDate = new Date; }
     return __awaiter(this, void 0, void 0, function () {
         var definitions;
         return __generator(this, function (_a) {
@@ -101,36 +109,25 @@ function getProjectsCoverage(maxDate) {
     });
 }
 exports.getProjectsCoverage = getProjectsCoverage;
-// TODO: this
-function getProjectsCoverageComparison(date1, date2) {
-    if (date1 === void 0) { date1 = new Date(); }
-    if (date2 === void 0) { date2 = new Date(); }
+function getProjectsCoverageComparison(dateBefore, dateAfter) {
+    if (dateAfter === void 0) { dateAfter = new Date(); }
     return __awaiter(this, void 0, void 0, function () {
-        var definitions, defIds, builds, coverages;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0: return [4 /*yield*/, getDefinitions()];
+        var definitions, _a, resultsBefore, resultsAfter;
+        return __generator(this, function (_b) {
+            switch (_b.label) {
+                case 0:
+                    if (!dateBefore)
+                        throw Error('dateBefore is required!');
+                    return [4 /*yield*/, getDefinitions()];
                 case 1:
-                    definitions = _a.sent();
-                    defIds = definitions.map(ramda_1.default.prop("id"));
-                    return [4 /*yield*/, azure_1.default.build(defIds, date1)];
+                    definitions = _b.sent();
+                    return [4 /*yield*/, Promise.all([
+                            _getProjectsCoverage(definitions, dateBefore),
+                            _getProjectsCoverage(definitions, dateAfter)
+                        ])];
                 case 2:
-                    builds = _a.sent();
-                    if (!builds)
-                        throw Error("No builds");
-                    return [4 /*yield*/, Promise.all(builds.map(function (build) { return azure_1.default.coverage(build.id); }))];
-                case 3:
-                    coverages = _a.sent();
-                    if (!coverages)
-                        throw Error("No coverages");
-                    return [2 /*return*/, coverages.map(function (c, i) {
-                            return !c
-                                ? undefined
-                                : {
-                                    name: builds[i].definition.name,
-                                    coverage: c
-                                };
-                        })];
+                    _a = _b.sent(), resultsBefore = _a[0], resultsAfter = _a[1];
+                    return [2 /*return*/, mergeResultsForComparison(resultsBefore, resultsAfter)];
             }
         });
     });
