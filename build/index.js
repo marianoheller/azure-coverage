@@ -35,54 +35,48 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 require("dotenv").config();
-var ramda_1 = __importDefault(require("ramda"));
-var azure_1 = __importDefault(require("./services/azure"));
+var coverage = __importStar(require("./modules/coverage"));
+var chalk_1 = __importDefault(require("chalk"));
 main();
 // ===========================================================
 function main() {
     return __awaiter(this, void 0, void 0, function () {
-        var definitions_1, defIds, builds, coverages, result, err_1;
+        var results, err_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    _a.trys.push([0, 4, , 5]);
-                    return [4 /*yield*/, azure_1.default.definition()];
+                    _a.trys.push([0, 2, , 3]);
+                    return [4 /*yield*/, coverage.getProjectsCoverage()];
                 case 1:
-                    definitions_1 = _a.sent();
-                    if (!definitions_1)
-                        throw Error("No definitions");
-                    defIds = definitions_1.map(ramda_1.default.prop("id"));
-                    return [4 /*yield*/, azure_1.default.build(defIds)];
+                    results = _a.sent();
+                    prettyPrint(results);
+                    return [3 /*break*/, 3];
                 case 2:
-                    builds = _a.sent();
-                    if (!builds)
-                        throw Error("No builds");
-                    return [4 /*yield*/, Promise.all(builds.map(function (bId) { return azure_1.default.coverage(bId); }))];
-                case 3:
-                    coverages = _a.sent();
-                    result = coverages
-                        .map(function (c, i) {
-                        return !c
-                            ? undefined
-                            : {
-                                name: definitions_1[i].name,
-                                coverage: c
-                            };
-                    })
-                        .filter(Boolean);
-                    console.log("RESULT", result);
-                    return [3 /*break*/, 5];
-                case 4:
                     err_1 = _a.sent();
                     console.error(err_1.message);
-                    return [3 /*break*/, 5];
-                case 5: return [2 /*return*/];
+                    return [3 /*break*/, 3];
+                case 3: return [2 /*return*/];
             }
         });
+    });
+}
+function prettyPrint(results) {
+    results.forEach(function (r) {
+        if (!r)
+            return;
+        var coverage = (r.coverage * 100).toFixed(2);
+        console.log(r.name + ": " + chalk_1.default.bold(coverage) + "%");
     });
 }

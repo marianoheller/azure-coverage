@@ -20,18 +20,22 @@ interface IDefinition {
 interface IBuildOptions {
   organization: string | undefined;
   project: string | undefined;
-  definitions: Array<number>
+  definitions: Array<number>;
+  maxTime: string;
 }
 
 interface IBuildReport {
   count: number;
-  value: Array<IDefinition>;
+  value: Array<IBuild>;
 }
 
 interface IBuild {
   id: number;
+  definition: {
+    id: number;
+    name: string;
+  };
 }
-
 
 // ========================================
 // Coverage
@@ -55,4 +59,18 @@ interface ICoverageStats {
   label: string;
   covered: number;
   total: number;
+}
+
+// ========================================
+// Results
+interface IResult {
+  id: number,
+  name: string;
+  coverage: number;
+}
+
+interface IResultComparison {
+  name: string;
+  coverageBefore: number;
+  coverageAfter: number;
 }

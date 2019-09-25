@@ -8,16 +8,13 @@ const BASE_CONFIG = {
 
 export const parseBuilds: (
   data: IBuildReport
-) => Array<number> = R.compose(
-  R.map(Number),
-  R.map(R.prop("id")),
-  R.prop("value")
-);
+) => Array<IBuild> = R.prop("value");
 
-export default (definitions: Array<number>) =>
+export default (definitions: Array<number>, maxDate: Date) =>
   agent
     .fetchBuilds({
       ...BASE_CONFIG,
-      definitions
+      definitions,
+      maxTime: maxDate.toISOString()
     })
     .then(parseBuilds)

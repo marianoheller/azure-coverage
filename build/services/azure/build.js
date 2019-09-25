@@ -20,9 +20,9 @@ var BASE_CONFIG = {
     organization: process.env.ORGANIZATION,
     project: process.env.PROJECT
 };
-exports.parseBuilds = ramda_1.default.compose(ramda_1.default.map(Number), ramda_1.default.map(ramda_1.default.prop("id")), ramda_1.default.prop("value"));
-exports.default = (function (definitions) {
+exports.parseBuilds = ramda_1.default.prop("value");
+exports.default = (function (definitions, maxDate) {
     return agent_1.default
-        .fetchBuilds(__assign(__assign({}, BASE_CONFIG), { definitions: definitions }))
+        .fetchBuilds(__assign(__assign({}, BASE_CONFIG), { definitions: definitions, maxTime: maxDate.toISOString() }))
         .then(exports.parseBuilds);
 });
