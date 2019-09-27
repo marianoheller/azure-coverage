@@ -35,29 +35,81 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-require("dotenv").config();
-var yargs_1 = require("yargs");
-var tasks_1 = require("./modules/tasks");
-function main() {
+var chalk_1 = __importDefault(require("chalk"));
+var subWeeks_1 = __importDefault(require("date-fns/subWeeks"));
+var coverage = __importStar(require("./coverage"));
+function parseArgs(argv) {
+    if (!Object.keys(argv).length)
+        return simpleCoverageReport;
+    if (argv.d)
+        return comparisonCoverageReport;
+    return simpleCoverageReport;
+}
+exports.parseArgs = parseArgs;
+// =============================================
+// Tasks
+function simpleCoverageReport() {
     return __awaiter(this, void 0, void 0, function () {
-        var task, err_1;
+        var results;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0:
-                    _a.trys.push([0, 2, , 3]);
-                    task = tasks_1.parseArgs(yargs_1.argv);
-                    return [4 /*yield*/, task()];
+                case 0: return [4 /*yield*/, coverage.getProjectsCoverage()];
                 case 1:
-                    _a.sent();
-                    return [3 /*break*/, 3];
-                case 2:
-                    err_1 = _a.sent();
-                    console.error(err_1.message);
-                    return [3 /*break*/, 3];
-                case 3: return [2 /*return*/];
+                    results = _a.sent();
+                    prettyPrint(results);
+                    return [2 /*return*/];
             }
         });
     });
 }
-main();
+function comparisonCoverageReport() {
+    return __awaiter(this, void 0, void 0, function () {
+        var results2;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, coverage.getProjectsCoverageComparison(subWeeks_1.default(Date.now(), 2))];
+                case 1:
+                    results2 = _a.sent();
+                    prettyPrint2(results2);
+                    return [2 /*return*/];
+            }
+        });
+    });
+}
+// =============================================
+// Helpers
+// TODO: improve printers
+function prettifyCoverage(coverage) {
+    return (coverage * 100).toFixed(2);
+}
+function prettyPrint(results) {
+    results.forEach(function (r) {
+        if (!r)
+            return;
+        var coverage = prettifyCoverage(r.coverage);
+        console.log(r.name + ": " + chalk_1.default.bold(coverage) + "%");
+    });
+}
+function prettyPrint2(results) {
+    results.forEach(function (r) {
+        if (!r)
+            return;
+        var coverageBefore = prettifyCoverage(r.coverageBefore);
+        var coverageAfter = prettifyCoverage(r.coverageAfter);
+        var _diff = r.coverageAfter - r.coverageBefore;
+        var smartColor = _diff >= 0 ? chalk_1.default.green : chalk_1.default.red;
+        var difference = prettifyCoverage(_diff);
+        console.log(r.name + ": " + chalk_1.default.bold(coverageAfter) + "% / " + chalk_1.default.grey(coverageBefore) + "% / " + smartColor(difference) + "%");
+    });
+}
